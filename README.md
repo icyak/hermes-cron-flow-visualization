@@ -1,8 +1,6 @@
-# Task Flow — Hermes Cron Job Flow Visualizer
+# Cron Flow Viz — Hermes Cron Job Flow Visualizer
 
 A [Hermes WebUI](https://hermes-agent.nousresearch.com) dashboard plugin that visualizes the data flow of your cron jobs. Click any job to see its trigger, agent/script, connected APIs, file operations, process steps, and delivery targets — all in one flow diagram.
-
-![screenshot](https://via.placeholder.com/800x450/1a1d2e/e1e4ea?text=Task+Flow+Preview)
 
 ## Features
 
@@ -12,15 +10,13 @@ A [Hermes WebUI](https://hermes-agent.nousresearch.com) dashboard plugin that vi
 - **Process Steps** — ordered breakdown of what the job does internally
 - **Custom profiles** — define detailed connection maps for your own jobs
 
-![flow](https://via.placeholder.com/400x600/0f1117/e1e4ea?text=Flow+Diagram+Preview)
-
 ## Installation
 
 ### 1. Clone into plugins directory
 
 ```bash
 cd ~/.hermes/plugins
-git clone https://github.com/icyak/task-flow-vis.git
+git clone https://github.com/icyak/hermes-cron-flow-viz.git
 ```
 
 ### 2. Add the backend API endpoint
@@ -36,24 +32,24 @@ import json, os
 path = os.path.expanduser('~/.hermes/webui/settings.json')
 with open(path) as f:
     s = json.load(f)
-s.setdefault('dashboard_plugins', {})['task-flow-vis'] = True
+s.setdefault('dashboard_plugins', {})['hermes-cron-flow-viz'] = True
 with open(path, 'w') as f:
     json.dump(s, f, indent=2)
 EOF
 ```
 
-Or via WebUI: **Settings → Plugins** → toggle **Task Flow** on.
+Or via WebUI: **Settings → Plugins** → toggle **Cron Flow Viz** on.
 
 ### 4. Add sidebar button (optional)
 
-To add a Task Flow button to the sidebar, edit `static/index.html` in the Hermes WebUI repo. Add after the Insights button:
+To add a sidebar button, edit `static/index.html` in the Hermes WebUI repo. Add after the Insights button:
 
 ```html
 <!-- Rail (desktop) -->
 <button class="rail-btn nav-tab has-tooltip" data-panel="plugin"
-  data-label="Task Flow"
-  onclick="switchPluginPage(event,'/task-flow-vis','Task Flow')"
-  data-tooltip="Task Flow - Cron job flow visualization" aria-label="Task Flow">
+  data-label="Cron Flow Viz"
+  onclick="switchPluginPage(event,'/hermes-cron-flow-viz','Cron Flow Viz')"
+  data-tooltip="Cron Flow Viz - Cron job flow visualization" aria-label="Cron Flow Viz">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
   </svg>
@@ -108,7 +104,7 @@ To find your job IDs, run `hermes cron list` or check your WebUI cron settings.
 ## Project structure
 
 ```
-task-flow-vis/
+hermes-cron-flow-viz/
 ├── README.md                   ← this file
 ├── LICENSE                     ← MIT
 ├── BACKEND-SETUP.md            ← backend API endpoint instructions

@@ -1,5 +1,5 @@
 /**
- * Task Flow — Hermes Cron Job Flow Visualizer
+ * Cron Flow Viz — Hermes Cron Job Flow Visualizer
  *
  * A Hermes WebUI dashboard plugin that shows a flow diagram for each cron job:
  * the trigger, agent/script, connected APIs, file operations, and delivery target.
@@ -352,7 +352,7 @@
   // ══════════════════════════════════════════════════════════
   function renderJobList(container, jobs) {
     container.innerHTML = '';
-    container.appendChild(h('h1', null, '🔄', 'Task Flow — select a job', h('small', null, jobs.length + ' jobs')));
+    container.appendChild(h('h1', null, '🔄', 'Cron Flow Viz — select a job', h('small', null, jobs.length + ' jobs')));
 
     var list = h('div', { className: 'job-list' });
 
