@@ -1,0 +1,4 @@
+# Only @PeterValachovic can approve pull requests that touch anything in
+# this repo. Branch protection on `main` requires code-owner review, so
+# a PR cannot merge without an approval from this user.
+* @PeterValachovic
