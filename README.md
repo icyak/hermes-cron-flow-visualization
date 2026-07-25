@@ -31,14 +31,15 @@ The plugin runs in a sandboxed iframe and needs a CORS-enabled API endpoint to r
 
 ```bash
 # Via CLI
-python3 -c "
-import json
-with open('/home/peder/.hermes/webui/settings.json') as f:
+python3 << 'EOF'
+import json, os
+path = os.path.expanduser('~/.hermes/webui/settings.json')
+with open(path) as f:
     s = json.load(f)
 s.setdefault('dashboard_plugins', {})['task-flow-vis'] = True
-with open('/home/peder/.hermes/webui/settings.json', 'w') as f:
+with open(path, 'w') as f:
     json.dump(s, f, indent=2)
-"
+EOF
 ```
 
 Or via WebUI: **Settings → Plugins** → toggle **Task Flow** on.
