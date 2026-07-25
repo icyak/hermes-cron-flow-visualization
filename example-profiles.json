@@ -1,0 +1,48 @@
+{
+  "README": "Copy entries from EXAMPLE_PROFILES into CUSTOM_PROFILES in dashboard/dist/index.js and adapt to your own jobs. Each key is a cron job ID from your Hermes instance. Example data is fictional.",
+
+  "EXAMPLE_PROFILES": {
+    "demo-daily-report": {
+      "name": "Daily Report",
+      "connections": [
+        { "type": "api", "label": "Weather API", "detail": "GET current conditions for location", "direction": "read", "auth": "API key" },
+        { "type": "api", "label": "Internal Analytics", "detail": "GET yesterday metrics", "direction": "read", "auth": "Bearer token" },
+        { "type": "file", "label": "Report template", "detail": "~/.hermes/templates/daily.md", "format": "Markdown" }
+      ],
+      "process": [
+        { "label": "1. Fetch weather", "detail": "Open-Meteo or wttr.in for location" },
+        { "label": "2. Fetch metrics", "detail": "Internal API — daily active users, revenue, errors" },
+        { "label": "3. Render report", "detail": "Fill markdown template with fetched data" },
+        { "label": "4. Deliver", "detail": "Send via configured delivery channel (Slack/Telegram/WhatsApp)" }
+      ]
+    },
+    "demo-data-pipeline": {
+      "name": "Data Pipeline",
+      "connections": [
+        { "type": "api", "label": "Source API", "detail": "GET raw data, paginated", "direction": "read", "auth": "OAuth2" },
+        { "type": "file", "label": "SQLite DB", "detail": "~/.hermes/data/pipeline.db", "format": "SQLite" },
+        { "type": "api", "label": "Destination API", "detail": "POST transformed data", "direction": "write", "auth": "API key" }
+      ],
+      "process": [
+        { "label": "1. Extract", "detail": "Fetch latest records from source API (since last run)" },
+        { "label": "2. Transform", "detail": "Normalize fields, convert currencies, validate schema" },
+        { "label": "3. Load", "detail": "Upsert into local SQLite + POST to destination API" },
+        { "label": "4. Cleanup", "detail": "Archive state cursor, remove temp files" }
+      ]
+    },
+    "demo-weekly-sweep": {
+      "name": "Weekly Sweep",
+      "connections": [
+        { "type": "api", "label": "Database", "detail": "SELECT expired records", "direction": "read", "auth": "Database user/pass" },
+        { "type": "file", "label": "Archive bucket", "detail": "s3://backups/weekly/", "format": "GZip JSON" },
+        { "type": "api", "label": "Slack Webhook", "detail": "POST summary notification", "direction": "write", "auth": "Webhook URL" }
+      ],
+      "process": [
+        { "label": "1. Query expired", "detail": "SELECT from DB where expiry < NOW()" },
+        { "label": "2. Archive", "detail": "Compress to GZip JSON, upload to S3" },
+        { "label": "3. Purge", "detail": "DELETE expired records from DB" },
+        { "label": "4. Notify", "detail": "POST summary to Slack webhook (#ops channel)" }
+      ]
+    }
+  }
+}
