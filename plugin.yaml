@@ -1,0 +1,10 @@
+name: hermes-cron-flow-visualization
+version: 2.0.0
+description: >
+  Visualize the data flow of your Hermes cron jobs — trigger, agent/script,
+  connected APIs, files, process steps, and delivery target. Ships both a
+  Web Dashboard tab (see dashboard/) and a model tool + /cronflow slash
+  command so the same visualization works from a normal Hermes agent
+  session (CLI, TUI, gateway) without the dashboard running.
+author: "@icyak"
+kind: standalone

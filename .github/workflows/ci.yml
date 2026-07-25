@@ -7,6 +7,62 @@ on:
     branches: [main]
 
 jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install ruff pyyaml pytest fastapi pydantic httpx
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Python syntax check (py_compile)
+        run: |
+          python -m py_compile profiles.py __init__.py dashboard/plugin_api.py
+
+      - name: Validate plugin.yaml
+        run: |
+          python -c "
+          import yaml
+          with open('plugin.yaml') as f:
+              data = yaml.safe_load(f)
+          assert data.get('name') == 'hermes-cron-flow-visualization', 'plugin.yaml name mismatch'
+          assert data.get('version'), 'plugin.yaml missing version'
+          print('plugin.yaml OK:', data['name'], data['version'])
+          "
+
+      - name: Validate dashboard manifest.json
+        run: |
+          python -c "
+          import json
+          with open('dashboard/manifest.json') as f:
+              data = json.load(f)
+          required = ['name', 'label', 'tab', 'entry']
+          missing = [k for k in required if k not in data]
+          assert not missing, f'manifest.json missing keys: {missing}'
+          assert data['name'] == 'hermes-cron-flow-visualization'
+          assert data['tab'].get('path'), 'manifest.json tab.path is required'
+          print('manifest.json OK')
+          "
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: JS syntax check
+        run: node --check dashboard/dist/index.js
+
+      - name: Run test suite
+        run: python -m pytest tests/ -v
+
   lint:
     name: Lint & Format Check
     runs-on: ubuntu-latest
