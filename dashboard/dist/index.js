@@ -435,7 +435,7 @@
 
     if (profile.process) {
       profile.process.forEach(function (step, i) {
-        flow.appendChild(flowNode('process', '⚙️', step.label, step.detail));
+        flow.appendChild(flowNode('process', '⚙️', step.label || 'Unknown step', step.detail));
         if (i < profile.process.length - 1) flow.appendChild(arrow('↓'));
       });
     }
@@ -560,7 +560,7 @@
             if (c.type === 'api' || c.type === 'file') {
               readCol.appendChild(arrow(c.direction === 'write' ? 'writes' : 'reads'));
               readCol.appendChild(
-                flowNode(c.type, c.type === 'api' ? '🌐' : '📄', c.label, c.detail),
+                flowNode(c.type, c.type === 'api' ? '🌐' : '📄', c.label || 'Unknown', c.detail),
               );
             }
           });
@@ -572,7 +572,7 @@
         if (profile.process) {
           profile.process.forEach(function (p) {
             procCol.appendChild(arrow('→'));
-            procCol.appendChild(flowNode('api', '⚙️', p.label, p.detail));
+            procCol.appendChild(flowNode('api', '⚙️', p.label || 'Unknown step', p.detail));
           });
         }
         procCol.appendChild(arrow('creates'));
@@ -649,15 +649,15 @@
           h(
             'div',
             { className: 'dt' },
-            c.type.toUpperCase() + (c.direction ? ' · ' + c.direction : ''),
+            (c.type || '').toUpperCase() + (c.direction ? ' · ' + c.direction : ''),
           ),
         );
-        card.appendChild(h('div', { className: 'dd' }, c.label));
+        card.appendChild(h('div', { className: 'dd' }, c.label || 'Unknown'));
         card.appendChild(
           h(
             'div',
             { className: 'dd code', style: { marginTop: '4px', color: 'var(--muted)' } },
-            c.detail,
+            c.detail || '',
           ),
         );
         if (c.auth)
@@ -714,7 +714,7 @@
               'div',
               { style: { display: 'flex', gap: '6px', alignItems: 'flex-start' } },
               h('span', { style: { color: 'var(--cyan)', flexShrink: 0 } }, '▸'),
-              h('span', null, h('strong', null, step.label), ': ', step.detail),
+              h('span', null, h('strong', null, step.label || 'Unknown step'), ': ', step.detail || ''),
             ),
           );
         });

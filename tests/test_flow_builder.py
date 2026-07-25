@@ -220,6 +220,69 @@ def test_handle_cron_flow_visualize_set_profile_invalid_json(flow_module, fake_c
     assert "not valid JSON" in result["error"]
 
 
+def test_handle_cron_flow_visualize_set_profile_connection_missing_type(
+    flow_module, fake_cron_jobs, profiles_module
+):
+    fake_cron_jobs([{"id": "job-1", "name": "One", "enabled": True, "deliver": "local"}])
+
+    result = json.loads(flow_module._handle_cron_flow_visualize({
+        "action": "set_profile",
+        "job_id": "job-1",
+        "profile_json": json.dumps({
+            "connections": [{"label": "Weather API", "detail": "..."}],
+        }),
+    }))
+
+    assert result["success"] is False
+    assert "validation" in result["error"]
+    assert profiles_module.get_profile("job-1") == {}
+
+
+def test_handle_cron_flow_visualize_set_profile_connection_invalid_type(
+    flow_module, fake_cron_jobs, profiles_module
+):
+    fake_cron_jobs([{"id": "job-1", "name": "One", "enabled": True, "deliver": "local"}])
+
+    result = json.loads(flow_module._handle_cron_flow_visualize({
+        "action": "set_profile",
+        "job_id": "job-1",
+        "profile_json": json.dumps({
+            "connections": [{"type": "ftp", "label": "Legacy drop"}],
+        }),
+    }))
+
+    assert result["success"] is False
+    assert "validation" in result["error"]
+    assert profiles_module.get_profile("job-1") == {}
+
+
+def test_handle_cron_flow_visualize_set_profile_valid_connections_and_process_round_trip(
+    flow_module, fake_cron_jobs
+):
+    fake_cron_jobs([{"id": "job-1", "name": "One", "enabled": True, "deliver": "local"}])
+
+    profile = {
+        "name": "Custom",
+        "connections": [
+            {"type": "api", "label": "Weather API", "detail": "...", "direction": "read", "auth": "API key"},
+        ],
+        "process": [{"label": "1. Fetch data", "detail": "..."}],
+    }
+
+    set_result = json.loads(flow_module._handle_cron_flow_visualize({
+        "action": "set_profile",
+        "job_id": "job-1",
+        "profile_json": json.dumps(profile),
+    }))
+
+    assert set_result["success"] is True
+    assert set_result["profile"] == profile
+
+    show_result = json.loads(flow_module._handle_cron_flow_visualize({"action": "show", "job_id": "job-1"}))
+    assert show_result["flow"]["connections"] == profile["connections"]
+    assert show_result["flow"]["process"] == profile["process"]
+
+
 def test_handle_cron_flow_visualize_unknown_action(flow_module, fake_cron_jobs):
     fake_cron_jobs([])
 

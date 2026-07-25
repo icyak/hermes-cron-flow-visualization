@@ -191,3 +191,47 @@ def test_delete_profile_missing_profile_returns_removed_false(client):
 
     assert resp.status_code == 200
     assert resp.json() == {"ok": True, "removed": False, "job_id": "job-1"}
+
+
+def test_put_profile_connection_missing_type_returns_422(client, profiles_module):
+    body = {
+        "connections": [{"label": "Backup target", "detail": "/mnt/backups"}],
+    }
+
+    resp = client.put("/jobs/job-1/profile", json=body)
+
+    assert resp.status_code == 422
+    assert profiles_module.get_profile("job-1") == {}
+
+
+def test_put_profile_connection_null_type_returns_422(client, profiles_module):
+    body = {
+        "connections": [{"type": None, "label": "Backup target"}],
+    }
+
+    resp = client.put("/jobs/job-1/profile", json=body)
+
+    assert resp.status_code == 422
+    assert profiles_module.get_profile("job-1") == {}
+
+
+def test_put_profile_connection_invalid_type_returns_422(client, profiles_module):
+    body = {
+        "connections": [{"type": "ftp", "label": "Legacy FTP drop"}],
+    }
+
+    resp = client.put("/jobs/job-1/profile", json=body)
+
+    assert resp.status_code == 422
+    assert profiles_module.get_profile("job-1") == {}
+
+
+def test_put_profile_process_step_missing_label_returns_422(client, profiles_module):
+    body = {
+        "process": [{"detail": "does something"}],
+    }
+
+    resp = client.put("/jobs/job-1/profile", json=body)
+
+    assert resp.status_code == 422
+    assert profiles_module.get_profile("job-1") == {}
