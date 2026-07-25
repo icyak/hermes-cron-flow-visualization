@@ -2,6 +2,9 @@
 
 A [Hermes WebUI](https://hermes-agent.nousresearch.com) dashboard plugin that visualizes the data flow of your cron jobs. Click any job to see its trigger, agent/script, connected APIs, file operations, process steps, and delivery targets — all in one flow diagram.
 
+![GitHub Actions CI](https://github.com/icyak/hermes-cron-flow-visualization/actions/workflows/ci.yml/badge.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 ## Features
 
 - **Job list** — all cron jobs sorted by status, with schedule, provider, and delivery info

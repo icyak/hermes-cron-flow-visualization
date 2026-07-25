@@ -42,30 +42,67 @@
     'demo-daily-report': {
       name: 'Daily Report (example)',
       connections: [
-        { type: 'api', label: 'Weather API', detail: 'GET current conditions for location', direction: 'read', auth: 'API key' },
-        { type: 'api', label: 'Internal Analytics', detail: 'GET yesterday metrics', direction: 'read', auth: 'Bearer token' },
-        { type: 'file', label: 'Report template', detail: '~/.hermes/templates/daily.md', format: 'Markdown' },
+        {
+          type: 'api',
+          label: 'Weather API',
+          detail: 'GET current conditions for location',
+          direction: 'read',
+          auth: 'API key',
+        },
+        {
+          type: 'api',
+          label: 'Internal Analytics',
+          detail: 'GET yesterday metrics',
+          direction: 'read',
+          auth: 'Bearer token',
+        },
+        {
+          type: 'file',
+          label: 'Report template',
+          detail: '~/.hermes/templates/daily.md',
+          format: 'Markdown',
+        },
       ],
       process: [
         { label: '1. Fetch weather', detail: 'Open-Meteo or wttr.in for location' },
         { label: '2. Fetch metrics', detail: 'Internal API — daily active users, revenue, errors' },
         { label: '3. Render report', detail: 'Fill markdown template with fetched data' },
-        { label: '4. Deliver', detail: 'Send via configured delivery channel (Slack/Telegram/WhatsApp)' },
-      ]
+        {
+          label: '4. Deliver',
+          detail: 'Send via configured delivery channel (Slack/Telegram/WhatsApp)',
+        },
+      ],
     },
     'demo-data-pipeline': {
       name: 'Data Pipeline (example)',
       connections: [
-        { type: 'api', label: 'Source API', detail: 'GET raw data, paginated', direction: 'read', auth: 'OAuth2' },
-        { type: 'file', label: 'SQLite DB', detail: '~/.hermes/data/pipeline.db', format: 'SQLite' },
-        { type: 'api', label: 'Destination API', detail: 'POST transformed data', direction: 'write', auth: 'API key' },
+        {
+          type: 'api',
+          label: 'Source API',
+          detail: 'GET raw data, paginated',
+          direction: 'read',
+          auth: 'OAuth2',
+        },
+        {
+          type: 'file',
+          label: 'SQLite DB',
+          detail: '~/.hermes/data/pipeline.db',
+          format: 'SQLite',
+        },
+        {
+          type: 'api',
+          label: 'Destination API',
+          detail: 'POST transformed data',
+          direction: 'write',
+          auth: 'API key',
+        },
       ],
       process: [
         { label: '1. Extract', detail: 'Fetch latest records from source API (since last run)' },
         { label: '2. Transform', detail: 'Normalize fields, convert currencies, validate schema' },
         { label: '3. Load', detail: 'Upsert into local SQLite + POST to destination API' },
         { label: '4. Cleanup', detail: 'Archive state cursor, remove temp files' },
-      ]
+      ],
     },
   };
 
@@ -257,7 +294,11 @@
   //  HELPERS
   // ══════════════════════════════════════════════════════════
   function h(tag, attrs) {
-    for (var _len = arguments.length, children = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+    for (
+      var _len = arguments.length, children = new Array(_len > 2 ? _len - 2 : 0), _key = 2;
+      _key < _len;
+      _key++
+    ) {
       children[_key - 2] = arguments[_key];
     }
     var el = document.createElement(tag);
@@ -288,7 +329,9 @@
     return el;
   }
 
-  function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
 
   // ══════════════════════════════════════════════════════════
   //  JOB ANALYSIS
@@ -297,7 +340,11 @@
     var info = {
       id: job.id,
       name: job.name || 'Unnamed job',
-      schedule: job.schedule_display || (job.schedule && job.schedule.display) || (job.schedule && job.schedule.expr) || '?',
+      schedule:
+        job.schedule_display ||
+        (job.schedule && job.schedule.display) ||
+        (job.schedule && job.schedule.expr) ||
+        '?',
       no_agent: !!job.no_agent,
       script: job.script || null,
       skills: Array.isArray(job.skills) ? job.skills : [],
@@ -318,8 +365,13 @@
     if (expr.startsWith('every')) return expr;
     var parts = expr.split(/\s+/);
     if (parts.length === 5) {
-      var min = parts[0], hr = parts[1], dom = parts[2], mon = parts[3], dow = parts[4];
-      if (dom === '*' && mon === '*' && dow === '*') return 'Daily at ' + String(hr).padStart(2,'0') + ':' + String(min).padStart(2,'0');
+      var min = parts[0],
+        hr = parts[1],
+        dom = parts[2],
+        mon = parts[3],
+        dow = parts[4];
+      if (dom === '*' && mon === '*' && dow === '*')
+        return 'Daily at ' + String(hr).padStart(2, '0') + ':' + String(min).padStart(2, '0');
       if (dom === '*' && mon === '*' && dow !== '*') return 'Weekly';
       if (dom !== '*' && mon === '*' && dow === '*') return 'Monthly (day ' + dom + ')';
     }
@@ -352,7 +404,15 @@
   // ══════════════════════════════════════════════════════════
   function renderJobList(container, jobs) {
     container.innerHTML = '';
-    container.appendChild(h('h1', null, '🔄', 'Cron Flow Visualization — select a job', h('small', null, jobs.length + ' jobs')));
+    container.appendChild(
+      h(
+        'h1',
+        null,
+        '🔄',
+        'Cron Flow Visualization — select a job',
+        h('small', null, jobs.length + ' jobs'),
+      ),
+    );
 
     var list = h('div', { className: 'job-list' });
 
@@ -367,22 +427,51 @@
     sorted.forEach(function (job) {
       var info = analyzeJob(job);
       var hasProfile = !!resolveProfile(job.id);
-      var iconType = info.no_agent ? 'script' : (hasProfile ? 'hybrid' : 'agent');
+      var iconType = info.no_agent ? 'script' : hasProfile ? 'hybrid' : 'agent';
       var statusDot = info.enabled ? '' : '⏸️';
       var statusBadge = info.last_status === 'ok' ? '✅' : info.last_status === 'error' ? '❌' : '';
       var scheduleShort = scheduleSummary(info.schedule);
 
-      var item = h('div', { className: 'job-item', onclick: function () { showJobDetail(container, jobs, job); } });
-      item.appendChild(h('div', { className: 'job-icon ' + iconType }, info.no_agent ? '📜' : (hasProfile ? '🔬' : '🤖')));
+      var item = h('div', {
+        className: 'job-item',
+        onclick: function () {
+          showJobDetail(container, jobs, job);
+        },
+      });
+      item.appendChild(
+        h(
+          'div',
+          { className: 'job-icon ' + iconType },
+          info.no_agent ? '📜' : hasProfile ? '🔬' : '🤖',
+        ),
+      );
       var infoDiv = h('div', { className: 'job-info' });
-      infoDiv.appendChild(h('div', { className: 'job-name' }, statusDot, ' ', info.name, ' ', h('span', null, statusBadge)));
+      infoDiv.appendChild(
+        h(
+          'div',
+          { className: 'job-name' },
+          statusDot,
+          ' ',
+          info.name,
+          ' ',
+          h('span', null, statusBadge),
+        ),
+      );
       var meta = h('div', { className: 'job-meta' });
       meta.appendChild(h('span', { className: 'chip' }, scheduleShort));
       if (hasProfile) meta.appendChild(h('span', { className: 'chip' }, '🔬 detailed'));
-      if (info.no_agent && info.script) meta.appendChild(h('span', { className: 'chip' }, '📜 ' + info.script));
+      if (info.no_agent && info.script)
+        meta.appendChild(h('span', { className: 'chip' }, '📜 ' + info.script));
       if (info.provider) meta.appendChild(h('span', { className: 'chip' }, info.provider));
-      if (info.skills.length) meta.appendChild(h('span', { className: 'chip' }, info.skills.length + ' skills'));
-      meta.appendChild(h('span', { className: 'chip' }, platformIcon(info.deliver) + ' ' + (info.deliver ? info.deliver.split(':')[0] : 'local')));
+      if (info.skills.length)
+        meta.appendChild(h('span', { className: 'chip' }, info.skills.length + ' skills'));
+      meta.appendChild(
+        h(
+          'span',
+          { className: 'chip' },
+          platformIcon(info.deliver) + ' ' + (info.deliver ? info.deliver.split(':')[0] : 'local'),
+        ),
+      );
       infoDiv.appendChild(meta);
       item.appendChild(infoDiv);
       item.appendChild(h('span', { className: 'job-arrow' }, '→'));
@@ -398,7 +487,14 @@
   function renderAgentFlowWithProfile(flow, info, profile) {
     flow.appendChild(flowNode('cron', '⏰', 'Cron Trigger', info.schedule));
     flow.appendChild(arrow('triggers'));
-    flow.appendChild(flowNode('agent', '🤖', 'AI Agent', (info.provider || 'default') + ' · ' + (info.model || '?')));
+    flow.appendChild(
+      flowNode(
+        'agent',
+        '🤖',
+        'AI Agent',
+        (info.provider || 'default') + ' · ' + (info.model || '?'),
+      ),
+    );
     flow.appendChild(arrow('executes process'));
 
     if (profile.process) {
@@ -412,8 +508,13 @@
     flow.appendChild(flowNode('platform', platformIcon(info.deliver), 'Platform', info.deliver));
 
     if (info.skills.length) {
-      var skillNote = h('div', { className: 'skills-list', style: { marginTop: '8px', justifyContent: 'center' } });
-      info.skills.forEach(function (s) { skillNote.appendChild(h('span', { className: 'skill-chip' }, s)); });
+      var skillNote = h('div', {
+        className: 'skills-list',
+        style: { marginTop: '8px', justifyContent: 'center' },
+      });
+      info.skills.forEach(function (s) {
+        skillNote.appendChild(h('span', { className: 'skill-chip' }, s));
+      });
       flow.appendChild(skillNote);
     }
   }
@@ -428,16 +529,35 @@
     var profile = resolveProfile(job.id);
 
     // Back button
-    var backBtn = h('button', { className: 'back-btn', onclick: function () { renderJobList(container, allJobs); } }, '← Back to list');
+    var backBtn = h(
+      'button',
+      {
+        className: 'back-btn',
+        onclick: function () {
+          renderJobList(container, allJobs);
+        },
+      },
+      '← Back to list',
+    );
 
     // Header
     var icon = info.no_agent ? '📜' : '🤖';
-    var typeLabel = info.no_agent ? 'no_agent script' : (profile ? 'AI agent + detail' : 'AI agent');
+    var typeLabel = info.no_agent ? 'no_agent script' : profile ? 'AI agent + detail' : 'AI agent';
     var header = h('div', { style: { marginBottom: '16px' } });
     header.appendChild(backBtn);
-    header.appendChild(h('h1', null, icon, ' ', info.name, h('small', null, typeLabel + ' · ' + String(info.id).substring(0,8))));
+    header.appendChild(
+      h(
+        'h1',
+        null,
+        icon,
+        ' ',
+        info.name,
+        h('small', null, typeLabel + ' · ' + String(info.id).substring(0, 8)),
+      ),
+    );
 
-    var statusColor = info.last_status === 'ok' ? 'ok' : info.last_status === 'error' ? 'err' : 'warn';
+    var statusColor =
+      info.last_status === 'ok' ? 'ok' : info.last_status === 'error' ? 'err' : 'warn';
     var statusText = info.last_status || 'never run';
 
     // Info cards
@@ -445,9 +565,16 @@
     detailGrid.appendChild(detailCard('⏰ Schedule', scheduleSummary(info.schedule), true));
     detailGrid.appendChild(detailCard('📊 Status', statusText, false, statusColor));
     detailGrid.appendChild(detailCard('📤 Delivery', info.deliver, true));
-    if (info.last_run) detailGrid.appendChild(detailCard('🕐 Last run', new Date(info.last_run).toLocaleString(), false));
-    if (info.next_run) detailGrid.appendChild(detailCard('⏳ Next run', new Date(info.next_run).toLocaleString(), false));
-    if (info.last_error) detailGrid.appendChild(detailCard('⚠️ Error', info.last_error, false, 'err'));
+    if (info.last_run)
+      detailGrid.appendChild(
+        detailCard('🕐 Last run', new Date(info.last_run).toLocaleString(), false),
+      );
+    if (info.next_run)
+      detailGrid.appendChild(
+        detailCard('⏳ Next run', new Date(info.next_run).toLocaleString(), false),
+      );
+    if (info.last_error)
+      detailGrid.appendChild(detailCard('⚠️ Error', info.last_error, false, 'err'));
     if (info.provider) detailGrid.appendChild(detailCard('⚙️ Provider', info.provider, false));
     if (info.model) detailGrid.appendChild(detailCard('🧠 Model', info.model, false));
     if (info.script) detailGrid.appendChild(detailCard('📜 Script path', info.script, true));
@@ -456,9 +583,17 @@
     // Skills
     if (info.skills.length) {
       var skillsSec = h('div', { style: { marginTop: '12px' } });
-      skillsSec.appendChild(h('div', { style: { fontSize: '12px', fontWeight: 600, marginBottom: '6px' } }, '🧩 Skills'));
+      skillsSec.appendChild(
+        h(
+          'div',
+          { style: { fontSize: '12px', fontWeight: 600, marginBottom: '6px' } },
+          '🧩 Skills',
+        ),
+      );
       var skillChips = h('div', { className: 'skills-list' });
-      info.skills.forEach(function (s) { skillChips.appendChild(h('span', { className: 'skill-chip' }, s)); });
+      info.skills.forEach(function (s) {
+        skillChips.appendChild(h('span', { className: 'skill-chip' }, s));
+      });
       skillsSec.appendChild(skillChips);
       header.appendChild(skillsSec);
     }
@@ -466,8 +601,7 @@
     container.appendChild(header);
 
     // ── Flow diagram ──
-    container.appendChild(h('div', { className: 'flow-section' },
-      h('h2', null, '📊 Data Flow')));
+    container.appendChild(h('div', { className: 'flow-section' }, h('h2', null, '📊 Data Flow')));
 
     var flow = h('div', { className: 'flow-diagram' });
 
@@ -489,7 +623,9 @@
           profile.connections.forEach(function (c) {
             if (c.type === 'api' || c.type === 'file') {
               readCol.appendChild(arrow(c.direction === 'write' ? 'writes' : 'reads'));
-              readCol.appendChild(flowNode(c.type, c.type === 'api' ? '🌐' : '📄', c.label, c.detail));
+              readCol.appendChild(
+                flowNode(c.type, c.type === 'api' ? '🌐' : '📄', c.label, c.detail),
+              );
             }
           });
         }
@@ -512,7 +648,9 @@
         flow.appendChild(arrow('stdout'));
         flow.appendChild(flowNode('file', '📄', 'Stdout output', 'text notification'));
         flow.appendChild(arrow('delivers'));
-        flow.appendChild(flowNode('platform', platformIcon(info.deliver), 'Platform', info.deliver));
+        flow.appendChild(
+          flowNode('platform', platformIcon(info.deliver), 'Platform', info.deliver),
+        );
       }
     } else if (profile) {
       // Agent job with known profile — expanded flow
@@ -521,7 +659,14 @@
       // Agent job with skills but no profile: cron → agent → skills → output
       flow.appendChild(flowNode('cron', '⏰', 'Cron Trigger', info.schedule));
       flow.appendChild(arrow('triggers'));
-      flow.appendChild(flowNode('agent', '🤖', 'AI Agent', (info.provider || 'default') + ' · ' + (info.model || '?')));
+      flow.appendChild(
+        flowNode(
+          'agent',
+          '🤖',
+          'AI Agent',
+          (info.provider || 'default') + ' · ' + (info.model || '?'),
+        ),
+      );
       flow.appendChild(arrow('uses skills'));
 
       if (info.skills.length <= 5) {
@@ -530,7 +675,9 @@
           if (i < info.skills.length - 1) flow.appendChild(arrow(''));
         });
       } else {
-        flow.appendChild(flowNode('skill', '🧩', info.skills.length + ' skills', info.skills.join(', ')));
+        flow.appendChild(
+          flowNode('skill', '🧩', info.skills.length + ' skills', info.skills.join(', ')),
+        );
       }
 
       flow.appendChild(arrow('output'));
@@ -539,7 +686,14 @@
       // Generic agent job
       flow.appendChild(flowNode('cron', '⏰', 'Cron Trigger', info.schedule));
       flow.appendChild(arrow('triggers'));
-      flow.appendChild(flowNode('agent', '🤖', 'AI Agent', (info.provider || 'default') + (info.model ? ' · ' + info.model : '')));
+      flow.appendChild(
+        flowNode(
+          'agent',
+          '🤖',
+          'AI Agent',
+          (info.provider || 'default') + (info.model ? ' · ' + info.model : ''),
+        ),
+      );
       flow.appendChild(arrow('output'));
       flow.appendChild(flowNode('platform', platformIcon(info.deliver), 'Platform', info.deliver));
     }
@@ -548,38 +702,108 @@
 
     // ── Connection details ──
     if (profile && profile.connections) {
-      container.appendChild(h('div', { className: 'flow-section' },
-        h('h2', null, '🔗 Known Connections')));
+      container.appendChild(
+        h('div', { className: 'flow-section' }, h('h2', null, '🔗 Known Connections')),
+      );
 
       var connGrid = h('div', { className: 'detail-grid' });
       profile.connections.forEach(function (c) {
         var card = h('div', { className: 'detail-card' });
-        card.appendChild(h('div', { className: 'dt' }, c.type.toUpperCase() + (c.direction ? ' · ' + c.direction : '')));
+        card.appendChild(
+          h(
+            'div',
+            { className: 'dt' },
+            c.type.toUpperCase() + (c.direction ? ' · ' + c.direction : ''),
+          ),
+        );
         card.appendChild(h('div', { className: 'dd' }, c.label));
-        card.appendChild(h('div', { className: 'dd code', style: { marginTop: '4px', color: 'var(--muted)' } }, c.detail));
-        if (c.auth) card.appendChild(h('div', { className: 'dd code', style: { marginTop: '2px', fontSize: '11px', color: 'var(--amber)' } }, '🔑 ' + c.auth));
-        if (c.url) card.appendChild(h('div', { className: 'dd code', style: { marginTop: '2px', fontSize: '10px', color: 'var(--muted)' } }, c.url));
+        card.appendChild(
+          h(
+            'div',
+            { className: 'dd code', style: { marginTop: '4px', color: 'var(--muted)' } },
+            c.detail,
+          ),
+        );
+        if (c.auth)
+          card.appendChild(
+            h(
+              'div',
+              {
+                className: 'dd code',
+                style: { marginTop: '2px', fontSize: '11px', color: 'var(--amber)' },
+              },
+              '🔑 ' + c.auth,
+            ),
+          );
+        if (c.url)
+          card.appendChild(
+            h(
+              'div',
+              {
+                className: 'dd code',
+                style: { marginTop: '2px', fontSize: '10px', color: 'var(--muted)' },
+              },
+              c.url,
+            ),
+          );
         connGrid.appendChild(card);
       });
       container.appendChild(connGrid);
 
       // Process steps
       if (profile.process) {
-        var procBox = h('div', { style: { marginTop: '16px', padding: '14px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px' } });
-        procBox.appendChild(h('div', { style: { fontWeight: 600, marginBottom: '8px', color: 'var(--muted)' } }, '📋 Process Steps'));
-        var stepList = h('div', { style: { display: 'flex', flexDirection: 'column', gap: '4px' } });
+        var procBox = h('div', {
+          style: {
+            marginTop: '16px',
+            padding: '14px',
+            background: 'var(--card)',
+            border: '1px solid var(--border)',
+            borderRadius: '8px',
+            fontSize: '12px',
+          },
+        });
+        procBox.appendChild(
+          h(
+            'div',
+            { style: { fontWeight: 600, marginBottom: '8px', color: 'var(--muted)' } },
+            '📋 Process Steps',
+          ),
+        );
+        var stepList = h('div', {
+          style: { display: 'flex', flexDirection: 'column', gap: '4px' },
+        });
         profile.process.forEach(function (step) {
-          stepList.appendChild(h('div', { style: { display: 'flex', gap: '6px', alignItems: 'flex-start' } },
-            h('span', { style: { color: 'var(--cyan)', flexShrink: 0 } }, '▸'),
-            h('span', null, h('strong', null, step.label), ': ', step.detail)));
+          stepList.appendChild(
+            h(
+              'div',
+              { style: { display: 'flex', gap: '6px', alignItems: 'flex-start' } },
+              h('span', { style: { color: 'var(--cyan)', flexShrink: 0 } }, '▸'),
+              h('span', null, h('strong', null, step.label), ': ', step.detail),
+            ),
+          );
         });
         procBox.appendChild(stepList);
         container.appendChild(procBox);
       }
 
       // Legend
-      var legend = h('div', { style: { marginTop: '16px', padding: '12px', background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px' } });
-      legend.appendChild(h('div', { style: { fontWeight: 600, marginBottom: '8px', color: 'var(--muted)' } }, 'Legend'));
+      var legend = h('div', {
+        style: {
+          marginTop: '16px',
+          padding: '12px',
+          background: 'var(--card)',
+          border: '1px solid var(--border)',
+          borderRadius: '8px',
+          fontSize: '12px',
+        },
+      });
+      legend.appendChild(
+        h(
+          'div',
+          { style: { fontWeight: 600, marginBottom: '8px', color: 'var(--muted)' } },
+          'Legend',
+        ),
+      );
       var legendItems = h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '10px' } });
       [
         ['#6366f1', 'Cron trigger'],
@@ -590,9 +814,22 @@
         ['#f97316', 'File / Storage'],
         ['#22c55e', 'Delivery'],
       ].forEach(function (pair) {
-        legendItems.appendChild(h('div', { style: { display: 'flex', alignItems: 'center', gap: '4px' } },
-          h('span', { style: { width: '8px', height: '8px', borderRadius: '50%', background: pair[0], display: 'inline-block' } }),
-          pair[1]));
+        legendItems.appendChild(
+          h(
+            'div',
+            { style: { display: 'flex', alignItems: 'center', gap: '4px' } },
+            h('span', {
+              style: {
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: pair[0],
+                display: 'inline-block',
+              },
+            }),
+            pair[1],
+          ),
+        );
       });
       legend.appendChild(legendItems);
       container.appendChild(legend);
@@ -600,10 +837,23 @@
 
     // ── No-profile hint ──
     if (!profile && !info.no_agent && info.skills.length) {
-      var hintBox = h('div', { style: { marginTop: '16px', padding: '14px', background: 'var(--card)', border: '1px solid var(--amber)', borderRadius: '8px', fontSize: '12px', color: 'var(--amber)' } });
-      hintBox.innerHTML = '<strong>💡 No detailed profile for this job.</strong><br>' +
+      var hintBox = h('div', {
+        style: {
+          marginTop: '16px',
+          padding: '14px',
+          background: 'var(--card)',
+          border: '1px solid var(--amber)',
+          borderRadius: '8px',
+          fontSize: '12px',
+          color: 'var(--amber)',
+        },
+      });
+      hintBox.innerHTML =
+        '<strong>💡 No detailed profile for this job.</strong><br>' +
         'To add one, edit <code>CUSTOM_PROFILES</code> in <code>dashboard/dist/index.js</code> — ' +
-        'add an entry with the job ID <code>' + esc(info.id) + '</code>, a <code>connections</code> array, and a <code>process</code> array. ' +
+        'add an entry with the job ID <code>' +
+        esc(info.id) +
+        '</code>, a <code>connections</code> array, and a <code>process</code> array. ' +
         'See the <code>EXAMPLE_PROFILES</code> section for the format.';
       container.appendChild(hintBox);
     }
@@ -618,16 +868,22 @@
   }
 
   function flowNode(type, icon, title, sub) {
-    return h('div', { className: 'flow-node ' + type },
+    return h(
+      'div',
+      { className: 'flow-node ' + type },
       h('div', { className: 'icon' }, icon),
       h('div', { className: 'title' }, title),
-      sub ? h('div', { className: 'sub' }, sub) : null);
+      sub ? h('div', { className: 'sub' }, sub) : null,
+    );
   }
 
   function arrow(label) {
-    return h('div', { className: 'flow-arrow' },
+    return h(
+      'div',
+      { className: 'flow-arrow' },
       '↓',
-      label ? h('span', { className: 'label' }, label) : null);
+      label ? h('span', { className: 'label' }, label) : null,
+    );
   }
 
   // ══════════════════════════════════════════════════════════
@@ -644,13 +900,17 @@
       })
       .then(function (data) {
         if (!data || !data.jobs || !data.jobs.length) {
-          root.innerHTML = '<div class="error-state">⚠️ No cron jobs found. Make sure the backend endpoint is set up (see BACKEND-SETUP.md).</div>';
+          root.innerHTML =
+            '<div class="error-state">⚠️ No cron jobs found. Make sure the backend endpoint is set up (see BACKEND-SETUP.md).</div>';
           return;
         }
         renderJobList(root, data.jobs);
       })
       .catch(function (err) {
-        root.innerHTML = '<div class="error-state">⚠️ Failed to load cron jobs: ' + esc(err.message) + '<br><br>Make sure the Hermes WebUI is running and the backend endpoint is configured (see BACKEND-SETUP.md).</div>';
+        root.innerHTML =
+          '<div class="error-state">⚠️ Failed to load cron jobs: ' +
+          esc(err.message) +
+          '<br><br>Make sure the Hermes WebUI is running and the backend endpoint is configured (see BACKEND-SETUP.md).</div>';
       });
   }
 
