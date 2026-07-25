@@ -18,7 +18,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install ruff pyyaml pytest
+        run: pip install ruff pyyaml pytest fastapi pydantic httpx2
 
       - name: Ruff lint
         run: ruff check .
