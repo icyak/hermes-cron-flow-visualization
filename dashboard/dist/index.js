@@ -26,48 +26,16 @@
 (function () {
   'use strict';
 
-  // ══════════════════════════════════════════════════════════
-  //  CUSTOM PROFILES — Add your own job profiles here
-  // ══════════════════════════════════════════════════════════
-  // Each key must match a cron job ID from your Hermes instance.
-  // Run `hermes cron list` or check the WebUI Settings → Cron to find job IDs.
-  var CUSTOM_PROFILES = {};
+  var SDK = window.__HERMES_PLUGIN_SDK__;
+  if (!SDK) return;
 
-  // ══════════════════════════════════════════════════════════
-  //  EXAMPLE PROFILES (read-only reference for the format)
-  // ══════════════════════════════════════════════════════════
-  // Copy these into CUSTOM_PROFILES above and adapt to your own jobs.
-  // All example data is fictional — none of these jobs exist.
-  var EXAMPLE_PROFILES = {
-    'demo-daily-report': {
-      name: 'Daily Report (example)',
-      connections: [
-        { type: 'api', label: 'Weather API', detail: 'GET current conditions for location', direction: 'read', auth: 'API key' },
-        { type: 'api', label: 'Internal Analytics', detail: 'GET yesterday metrics', direction: 'read', auth: 'Bearer token' },
-        { type: 'file', label: 'Report template', detail: '~/.hermes/templates/daily.md', format: 'Markdown' },
-      ],
-      process: [
-        { label: '1. Fetch weather', detail: 'Open-Meteo or wttr.in for location' },
-        { label: '2. Fetch metrics', detail: 'Internal API — daily active users, revenue, errors' },
-        { label: '3. Render report', detail: 'Fill markdown template with fetched data' },
-        { label: '4. Deliver', detail: 'Send via configured delivery channel (Slack/Telegram/WhatsApp)' },
-      ]
-    },
-    'demo-data-pipeline': {
-      name: 'Data Pipeline (example)',
-      connections: [
-        { type: 'api', label: 'Source API', detail: 'GET raw data, paginated', direction: 'read', auth: 'OAuth2' },
-        { type: 'file', label: 'SQLite DB', detail: '~/.hermes/data/pipeline.db', format: 'SQLite' },
-        { type: 'api', label: 'Destination API', detail: 'POST transformed data', direction: 'write', auth: 'API key' },
-      ],
-      process: [
-        { label: '1. Extract', detail: 'Fetch latest records from source API (since last run)' },
-        { label: '2. Transform', detail: 'Normalize fields, convert currencies, validate schema' },
-        { label: '3. Load', detail: 'Upsert into local SQLite + POST to destination API' },
-        { label: '4. Cleanup', detail: 'Archive state cursor, remove temp files' },
-      ]
-    },
-  };
+  // API base for this plugin's backend routes (dashboard/plugin_api.py).
+  // Custom per-job profiles are resolved server-side (shared with the
+  // `cron_flow_visualize` model tool / `/cronflow` slash command via
+  // ../profiles.py) — every job the API returns already carries a
+  // `connections` + `process` array, generic or custom, plus a
+  // `has_custom_profile` flag the UI uses to badge detailed jobs.
+  var API_BASE = '/api/plugins/hermes-cron-flow-visualization';
 
   // ══════════════════════════════════════════════════════════
   //  STYLES
@@ -309,6 +277,7 @@
       last_error: job.last_error || null,
       next_run: job.next_run_at || null,
       enabled: job.enabled !== false,
+      has_custom_profile: !!job.has_custom_profile,
     };
     return info;
   }
@@ -337,14 +306,18 @@
   }
 
   // ══════════════════════════════════════════════════════════
-  //  PROFILE RESOLUTION: custom + fallback to examples
+  //  PROFILE RESOLUTION
   // ══════════════════════════════════════════════════════════
-  function resolveProfile(jobId) {
-    // User's custom profiles take priority
-    if (CUSTOM_PROFILES[jobId]) return CUSTOM_PROFILES[jobId];
-    // Fall back to example profiles (for illustration)
-    if (EXAMPLE_PROFILES[jobId]) return EXAMPLE_PROFILES[jobId];
-    return null;
+  // The backend already resolved custom-vs-generic connections/process
+  // for us (see ../__init__.py:build_flow + ../profiles.py), so this is
+  // just a normalizing accessor over the fields the API returned.
+  function resolveProfile(job) {
+    if (!job || (!job.connections && !job.process)) return null;
+    return {
+      name: job.name,
+      connections: job.connections || [],
+      process: job.process || [],
+    };
   }
 
   // ══════════════════════════════════════════════════════════
@@ -366,7 +339,7 @@
 
     sorted.forEach(function (job) {
       var info = analyzeJob(job);
-      var hasProfile = !!resolveProfile(job.id);
+      var hasProfile = !!info.has_custom_profile;
       var iconType = info.no_agent ? 'script' : (hasProfile ? 'hybrid' : 'agent');
       var statusDot = info.enabled ? '' : '⏸️';
       var statusBadge = info.last_status === 'ok' ? '✅' : info.last_status === 'error' ? '❌' : '';
@@ -425,7 +398,7 @@
     container.innerHTML = '';
 
     var info = analyzeJob(job);
-    var profile = resolveProfile(job.id);
+    var profile = resolveProfile(job);
 
     // Back button
     var backBtn = h('button', { className: 'back-btn', onclick: function () { renderJobList(container, allJobs); } }, '← Back to list');
@@ -599,12 +572,13 @@
     }
 
     // ── No-profile hint ──
-    if (!profile && !info.no_agent && info.skills.length) {
+    if (!info.has_custom_profile && !info.no_agent) {
       var hintBox = h('div', { style: { marginTop: '16px', padding: '14px', background: 'var(--card)', border: '1px solid var(--amber)', borderRadius: '8px', fontSize: '12px', color: 'var(--amber)' } });
-      hintBox.innerHTML = '<strong>💡 No detailed profile for this job.</strong><br>' +
-        'To add one, edit <code>CUSTOM_PROFILES</code> in <code>dashboard/dist/index.js</code> — ' +
-        'add an entry with the job ID <code>' + esc(info.id) + '</code>, a <code>connections</code> array, and a <code>process</code> array. ' +
-        'See the <code>EXAMPLE_PROFILES</code> section for the format.';
+      hintBox.innerHTML = '<strong>💡 Showing a generic flow.</strong> ' +
+        'Save a detailed profile for this job (connections + process steps) via the ' +
+        '<code>cron_flow_visualize</code> agent tool (action <code>set_profile</code>), ' +
+        'the <code>/cronflow</code> slash command\'s underlying tool, or ' +
+        '<code>PUT ' + esc(API_BASE) + '/jobs/' + esc(info.id) + '/profile</code>.';
       container.appendChild(hintBox);
     }
   }
@@ -633,30 +607,38 @@
   // ══════════════════════════════════════════════════════════
   //  INIT
   // ══════════════════════════════════════════════════════════
-  function init() {
-    var root = document.getElementById('pluginPageContainer') || document.body;
+  var React = SDK.React;
+
+  function Page() {
+    var useRef = SDK.hooks.useRef;
+    var useEffect = SDK.hooks.useEffect;
+    var containerRef = useRef(null);
+
+    useEffect(function () {
+      if (containerRef.current) {
+        init(containerRef.current);
+      }
+    }, []);
+
+    return React.createElement('div', { ref: containerRef });
+  }
+
+  function init(root) {
+    root = root || document.getElementById('pluginPageContainer') || document.body;
     root.innerHTML = '<div class="empty-state">⏳ Loading cron jobs...</div>';
 
-    fetch('/api/taskflow/jobs', { method: 'GET', credentials: 'omit' })
-      .then(function (r) {
-        if (!r.ok) throw new Error('HTTP ' + r.status);
-        return r.json();
-      })
+    SDK.fetchJSON(API_BASE + '/jobs')
       .then(function (data) {
         if (!data || !data.jobs || !data.jobs.length) {
-          root.innerHTML = '<div class="error-state">⚠️ No cron jobs found. Make sure the backend endpoint is set up (see BACKEND-SETUP.md).</div>';
+          root.innerHTML = '<div class="error-state">⚠️ No cron jobs found. Create one with `hermes cron create` or the cronjob tool.</div>';
           return;
         }
         renderJobList(root, data.jobs);
       })
       .catch(function (err) {
-        root.innerHTML = '<div class="error-state">⚠️ Failed to load cron jobs: ' + esc(err.message) + '<br><br>Make sure the Hermes WebUI is running and the backend endpoint is configured (see BACKEND-SETUP.md).</div>';
+        root.innerHTML = '<div class="error-state">⚠️ Failed to load cron jobs: ' + esc(err && err.message ? err.message : err) + '</div>';
       });
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
+  window.__HERMES_PLUGINS__.register('hermes-cron-flow-visualization', Page);
 })();
