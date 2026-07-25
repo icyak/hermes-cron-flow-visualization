@@ -7,6 +7,9 @@ Ships **two ways to use it**:
 1. A model tool (`cron_flow_visualize`) and a `/cronflow` slash command that work in any normal Hermes agent session (CLI, TUI, gateway) — no dashboard needed.
 2. A Web Dashboard tab (click a job to see its flow diagram), backed by this plugin's own native FastAPI backend.
 
+![GitHub Actions CI](https://github.com/icyak/hermes-cron-flow-visualization/actions/workflows/ci.yml/badge.svg)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
 ## Features
 
 - **Job list** — all cron jobs sorted by status, with schedule, provider, and delivery info

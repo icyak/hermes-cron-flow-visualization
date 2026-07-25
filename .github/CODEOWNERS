@@ -1,0 +1,4 @@
+# Only @icyak can approve pull requests that touch anything in this repo.
+# Branch protection on `main` requires a code-owner review, so a PR cannot
+# merge without an approval from this account.
+* @icyak
