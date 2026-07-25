@@ -112,7 +112,7 @@ class ProfileBody(BaseModel):
 @router.put("/jobs/{job_id}/profile")
 def put_profile(job_id: str, body: ProfileBody):
     flow_profiles = _profiles_module()
-    profile: Dict[str, Any] = {k: v for k, v in body.dict().items() if v is not None}
+    profile: Dict[str, Any] = {k: v for k, v in body.model_dump().items() if v is not None}
     saved = flow_profiles.upsert_profile(job_id, profile)
     return {"ok": True, "job_id": job_id, "profile": saved}
 
