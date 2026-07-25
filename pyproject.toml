@@ -7,3 +7,12 @@ select = ["E", "F", "W", "I"]
 ignore = [
   "E501",  # a few long lines in docstring JSON examples
 ]
+
+[tool.pytest.ini_options]
+# Without this, pytest wraps the repo root in a Package collector (it has
+# __init__.py) and unconditionally imports it during collection setup. That
+# __init__.py does `from . import profiles`, a relative import that fails
+# outside a real package -- and the repo dir name has hyphens, so it can
+# never be one. Capping confcutdir at tests/ stops pytest from walking up
+# past it, so the repo root is collected as a plain Dir instead.
+addopts = "--confcutdir=tests"
