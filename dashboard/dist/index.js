@@ -714,7 +714,13 @@
               'div',
               { style: { display: 'flex', gap: '6px', alignItems: 'flex-start' } },
               h('span', { style: { color: 'var(--cyan)', flexShrink: 0 } }, '▸'),
-              h('span', null, h('strong', null, step.label || 'Unknown step'), ': ', step.detail || ''),
+              h(
+                'span',
+                null,
+                h('strong', null, step.label || 'Unknown step'),
+                ': ',
+                step.detail || '',
+              ),
             ),
           );
         });
