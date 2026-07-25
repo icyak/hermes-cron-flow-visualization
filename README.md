@@ -1,4 +1,4 @@
-# Cron Flow Viz — Hermes Cron Job Flow Visualizer
+# Cron Flow Visualization — Hermes Cron Job Flow Visualizer
 
 A [Hermes WebUI](https://hermes-agent.nousresearch.com) dashboard plugin that visualizes the data flow of your cron jobs. Click any job to see its trigger, agent/script, connected APIs, file operations, process steps, and delivery targets — all in one flow diagram.
 
@@ -16,7 +16,7 @@ A [Hermes WebUI](https://hermes-agent.nousresearch.com) dashboard plugin that vi
 
 ```bash
 cd ~/.hermes/plugins
-git clone https://github.com/icyak/hermes-cron-flow-viz.git
+git clone https://github.com/icyak/hermes-cron-flow-visualization.git
 ```
 
 ### 2. Add the backend API endpoint
@@ -32,13 +32,13 @@ import json, os
 path = os.path.expanduser('~/.hermes/webui/settings.json')
 with open(path) as f:
     s = json.load(f)
-s.setdefault('dashboard_plugins', {})['hermes-cron-flow-viz'] = True
+s.setdefault('dashboard_plugins', {})['hermes-cron-flow-visualization'] = True
 with open(path, 'w') as f:
     json.dump(s, f, indent=2)
 EOF
 ```
 
-Or via WebUI: **Settings → Plugins** → toggle **Cron Flow Viz** on.
+Or via WebUI: **Settings → Plugins** → toggle **Cron Flow Visualization** on.
 
 ### 4. Add sidebar button (optional)
 
@@ -47,9 +47,9 @@ To add a sidebar button, edit `static/index.html` in the Hermes WebUI repo. Add 
 ```html
 <!-- Rail (desktop) -->
 <button class="rail-btn nav-tab has-tooltip" data-panel="plugin"
-  data-label="Cron Flow Viz"
-  onclick="switchPluginPage(event,'/hermes-cron-flow-viz','Cron Flow Viz')"
-  data-tooltip="Cron Flow Viz - Cron job flow visualization" aria-label="Cron Flow Viz">
+  data-label="Cron Flow Visualization"
+  onclick="switchPluginPage(event,'/hermes-cron-flow-visualization','Cron Flow Visualization')"
+  data-tooltip="Cron Flow Visualization - Cron job flow visualization" aria-label="Cron Flow Visualization">
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
     <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
   </svg>
@@ -104,7 +104,7 @@ To find your job IDs, run `hermes cron list` or check your WebUI cron settings.
 ## Project structure
 
 ```
-hermes-cron-flow-viz/
+hermes-cron-flow-visualization/
 ├── README.md                   ← this file
 ├── LICENSE                     ← MIT
 ├── BACKEND-SETUP.md            ← backend API endpoint instructions

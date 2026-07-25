@@ -1,11 +1,11 @@
 {
-  "name": "hermes-cron-flow-viz",
-  "label": "Cron Flow Viz",
+  "name": "hermes-cron-flow-visualization",
+  "label": "Cron Flow Visualization",
   "description": "Hermes WebUI dashboard plugin — visualize cron job data flows: triggers, agents, scripts, APIs, files, and delivery pipelines.",
   "icon": "GitBranch",
   "version": "1.0.0",
   "tab": {
-    "path": "/hermes-cron-flow-viz",
+    "path": "/hermes-cron-flow-visualization",
     "position": "after:cron"
   },
   "entry": "dist/index.js"
