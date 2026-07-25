@@ -4,10 +4,16 @@
  * A Hermes WebUI dashboard plugin that shows a flow diagram for each cron job:
  * the trigger, agent/script, connected APIs, file operations, and delivery target.
  *
+ * Data comes from SDK.fetchJSON against API_BASE = '/api/plugins/hermes-cron-flow-visualization',
+ * a FastAPI router mounted in-process by dashboard/plugin_api.py.
+ *
  * ── Adding custom job profiles ──
- * Add entries to the CUSTOM_PROFILES object below. Each key is a job ID (from
- * your Hermes cron list) and the value is a profile object with "connections"
- * and "process" arrays. See EXAMPLE_PROFILES for the shape.
+ * This file is not where profiles are set. Profiles are resolved server-side and
+ * stored by profiles.py. To add a detailed connection map for a job, use one of:
+ *   - The `cron_flow_visualize` tool with action=set_profile (from any agent session)
+ *   - `/cronflow` and ask the agent to set a profile for a job
+ *   - `PUT /api/plugins/hermes-cron-flow-visualization/jobs/<job_id>/profile` directly
+ * See README.md's "Adding custom job profiles" section and example-profiles.json for details.
  *
  * Profile format:
  * {

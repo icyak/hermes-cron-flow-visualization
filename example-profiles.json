@@ -1,5 +1,5 @@
 {
-  "README": "Copy entries from EXAMPLE_PROFILES into CUSTOM_PROFILES in dashboard/dist/index.js and adapt to your own jobs. Each key is a cron job ID from your Hermes instance. Example data is fictional.",
+  "README": "These are example payloads for PUT /api/plugins/hermes-cron-flow-visualization/jobs/<job_id>/profile (or the profile_json parameter of the cron_flow_visualize tool's set_profile action) — not something to paste into dashboard/dist/index.js. Each key under EXAMPLE_PROFILES is a cron job ID from your Hermes instance; adapt one entry's value and submit it as the request body for your own job. Example data is fictional.",
 
   "EXAMPLE_PROFILES": {
     "demo-daily-report": {
