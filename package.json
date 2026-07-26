@@ -5,7 +5,7 @@
   "description": "Hermes WebUI dashboard plugin — visualize cron job data flows",
   "license": "MIT",
   "devDependencies": {
-    "eslint": "^9.39.5",
+    "eslint": "^10.8.0",
     "globals": "^17.7.0",
     "prettier": "^3.2.0"
   },
