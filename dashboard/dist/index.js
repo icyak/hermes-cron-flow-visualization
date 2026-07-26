@@ -33,7 +33,9 @@
   'use strict';
 
   var SDK = window.__HERMES_PLUGIN_SDK__;
-  if (!SDK) return;
+  if (!SDK) {
+    return;
+  }
 
   // API base for this plugin's backend routes (dashboard/plugin_api.py).
   // Custom per-job profiles are resolved server-side (shared with the
@@ -253,7 +255,9 @@
       });
     }
     function append(child) {
-      if (child == null || child === false) return;
+      if (child === null || child === undefined || child === false) {
+        return;
+      }
       if (typeof child === 'string' || typeof child === 'number') {
         el.appendChild(document.createTextNode(String(child)));
       } else if (Array.isArray(child)) {
@@ -295,35 +299,118 @@
       enabled: job.enabled !== false,
       has_custom_profile: !!job.has_custom_profile,
     };
+
     return info;
   }
 
   function scheduleSummary(expr) {
-    if (!expr) return '?';
-    if (expr.startsWith('every')) return expr;
+    if (!expr) {
+      return '?';
+    }
+    if (expr.startsWith('every')) {
+      return expr;
+    }
     var parts = expr.split(/\s+/);
     if (parts.length === 5) {
-      var min = parts[0],
-        hr = parts[1],
-        dom = parts[2],
-        mon = parts[3],
-        dow = parts[4];
-      if (dom === '*' && mon === '*' && dow === '*')
-        return 'Daily at ' + String(hr).padStart(2, '0') + ':' + String(min).padStart(2, '0');
-      if (dom === '*' && mon === '*' && dow !== '*') return 'Weekly';
-      if (dom !== '*' && mon === '*' && dow === '*') return 'Monthly (day ' + dom + ')';
+      var min = parts[0];
+      var hr = parts[1];
+      var dom = parts[2];
+      var mon = parts[3];
+      var dow = parts[4];
+      if (dom === '*' && mon === '*' && dow === '*') {
+        return `Daily at ${String(hr).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+      }
+      if (dom === '*' && mon === '*' && dow !== '*') {
+        return 'Weekly';
+      }
+      if (dom !== '*' && mon === '*' && dow === '*') {
+        return `Monthly (day ${dom})`;
+      }
     }
     return expr;
   }
 
   function platformIcon(deliver) {
-    if (!deliver || deliver === 'local') return '💾';
-    if (deliver.includes('whatsapp')) return '💬';
-    if (deliver.includes('telegram')) return '✈️';
-    if (deliver.includes('email')) return '📧';
-    if (deliver.includes('discord')) return '🎮';
-    if (deliver.includes('slack')) return '💼';
+    if (!deliver || deliver === 'local') {
+      return '💾';
+    }
+    if (deliver.includes('whatsapp')) {
+      return '💬';
+    }
+    if (deliver.includes('telegram')) {
+      return '✈️';
+    }
+    if (deliver.includes('email')) {
+      return '📧';
+    }
+    if (deliver.includes('discord')) {
+      return '🎮';
+    }
+    if (deliver.includes('slack')) {
+      return '💼';
+    }
     return '📤';
+  }
+
+  // Job "kind" classification shared by the list icon and the detail header.
+  function jobKind(info, hasProfile) {
+    if (info.no_agent) {
+      return 'no_agent';
+    }
+    if (hasProfile) {
+      return 'hybrid';
+    }
+    return 'agent';
+  }
+
+  function jobIconType(info, hasProfile) {
+    if (jobKind(info, hasProfile) === 'no_agent') {
+      return 'script';
+    }
+    if (jobKind(info, hasProfile) === 'hybrid') {
+      return 'hybrid';
+    }
+    return 'agent';
+  }
+
+  function jobIcon(info, hasProfile) {
+    if (jobKind(info, hasProfile) === 'no_agent') {
+      return '📜';
+    }
+    if (jobKind(info, hasProfile) === 'hybrid') {
+      return '🔬';
+    }
+    return '🤖';
+  }
+
+  function statusBadgeIcon(lastStatus) {
+    if (lastStatus === 'ok') {
+      return '✅';
+    }
+    if (lastStatus === 'error') {
+      return '❌';
+    }
+    return '';
+  }
+
+  function statusColorClass(lastStatus) {
+    if (lastStatus === 'ok') {
+      return 'ok';
+    }
+    if (lastStatus === 'error') {
+      return 'err';
+    }
+    return 'warn';
+  }
+
+  function jobTypeLabel(info, profile) {
+    if (info.no_agent) {
+      return 'no_agent script';
+    }
+    if (profile) {
+      return 'AI agent + detail';
+    }
+    return 'AI agent';
   }
 
   // ══════════════════════════════════════════════════════════
@@ -333,7 +420,9 @@
   // for us (see ../__init__.py:build_flow + ../profiles.py), so this is
   // just a normalizing accessor over the fields the API returned.
   function resolveProfile(job) {
-    if (!job || (!job.connections && !job.process)) return null;
+    if (!job || (!job.connections && !job.process)) {
+      return null;
+    }
     return {
       name: job.name,
       connections: job.connections || [],
@@ -352,7 +441,7 @@
         null,
         '🔄',
         'Cron Flow Visualization — select a job',
-        h('small', null, jobs.length + ' jobs'),
+        h('small', null, `${jobs.length} jobs`),
       ),
     );
 
@@ -362,16 +451,18 @@
     var sorted = jobs.slice().sort(function (a, b) {
       var aActive = a.enabled !== false ? 0 : 1;
       var bActive = b.enabled !== false ? 0 : 1;
-      if (aActive !== bActive) return aActive - bActive;
+      if (aActive !== bActive) {
+        return aActive - bActive;
+      }
       return (a.name || '').localeCompare(b.name || '');
     });
 
     sorted.forEach(function (job) {
       var info = analyzeJob(job);
       var hasProfile = !!info.has_custom_profile;
-      var iconType = info.no_agent ? 'script' : hasProfile ? 'hybrid' : 'agent';
+      var iconType = jobIconType(info, hasProfile);
       var statusDot = info.enabled ? '' : '⏸️';
-      var statusBadge = info.last_status === 'ok' ? '✅' : info.last_status === 'error' ? '❌' : '';
+      var statusBadge = statusBadgeIcon(info.last_status);
       var scheduleShort = scheduleSummary(info.schedule);
 
       var item = h('div', {
@@ -380,13 +471,7 @@
           showJobDetail(container, jobs, job);
         },
       });
-      item.appendChild(
-        h(
-          'div',
-          { className: 'job-icon ' + iconType },
-          info.no_agent ? '📜' : hasProfile ? '🔬' : '🤖',
-        ),
-      );
+      item.appendChild(h('div', { className: `job-icon ${iconType}` }, jobIcon(info, hasProfile)));
       var infoDiv = h('div', { className: 'job-info' });
       infoDiv.appendChild(
         h(
@@ -401,17 +486,23 @@
       );
       var meta = h('div', { className: 'job-meta' });
       meta.appendChild(h('span', { className: 'chip' }, scheduleShort));
-      if (hasProfile) meta.appendChild(h('span', { className: 'chip' }, '🔬 detailed'));
-      if (info.no_agent && info.script)
-        meta.appendChild(h('span', { className: 'chip' }, '📜 ' + info.script));
-      if (info.provider) meta.appendChild(h('span', { className: 'chip' }, info.provider));
-      if (info.skills.length)
-        meta.appendChild(h('span', { className: 'chip' }, info.skills.length + ' skills'));
+      if (hasProfile) {
+        meta.appendChild(h('span', { className: 'chip' }, '🔬 detailed'));
+      }
+      if (info.no_agent && info.script) {
+        meta.appendChild(h('span', { className: 'chip' }, `📜 ${info.script}`));
+      }
+      if (info.provider) {
+        meta.appendChild(h('span', { className: 'chip' }, info.provider));
+      }
+      if (info.skills.length) {
+        meta.appendChild(h('span', { className: 'chip' }, `${info.skills.length} skills`));
+      }
       meta.appendChild(
         h(
           'span',
           { className: 'chip' },
-          platformIcon(info.deliver) + ' ' + (info.deliver ? info.deliver.split(':')[0] : 'local'),
+          `${platformIcon(info.deliver)} ${info.deliver ? info.deliver.split(':')[0] : 'local'}`,
         ),
       );
       infoDiv.appendChild(meta);
@@ -430,19 +521,16 @@
     flow.appendChild(flowNode('cron', '⏰', 'Cron Trigger', info.schedule));
     flow.appendChild(arrow('triggers'));
     flow.appendChild(
-      flowNode(
-        'agent',
-        '🤖',
-        'AI Agent',
-        (info.provider || 'default') + ' · ' + (info.model || '?'),
-      ),
+      flowNode('agent', '🤖', 'AI Agent', `${info.provider || 'default'} · ${info.model || '?'}`),
     );
     flow.appendChild(arrow('executes process'));
 
     if (profile.process) {
       profile.process.forEach(function (step, i) {
         flow.appendChild(flowNode('process', '⚙️', step.label || 'Unknown step', step.detail));
-        if (i < profile.process.length - 1) flow.appendChild(arrow('↓'));
+        if (i < profile.process.length - 1) {
+          flow.appendChild(arrow('↓'));
+        }
       });
     }
 
@@ -484,7 +572,7 @@
 
     // Header
     var icon = info.no_agent ? '📜' : '🤖';
-    var typeLabel = info.no_agent ? 'no_agent script' : profile ? 'AI agent + detail' : 'AI agent';
+    var typeLabel = jobTypeLabel(info, profile);
     var header = h('div', { style: { marginBottom: '16px' } });
     header.appendChild(backBtn);
     header.appendChild(
@@ -494,12 +582,11 @@
         icon,
         ' ',
         info.name,
-        h('small', null, typeLabel + ' · ' + String(info.id).substring(0, 8)),
+        h('small', null, `${typeLabel} · ${String(info.id).substring(0, 8)}`),
       ),
     );
 
-    var statusColor =
-      info.last_status === 'ok' ? 'ok' : info.last_status === 'error' ? 'err' : 'warn';
+    var statusColor = statusColorClass(info.last_status);
     var statusText = info.last_status || 'never run';
 
     // Info cards
@@ -507,19 +594,28 @@
     detailGrid.appendChild(detailCard('⏰ Schedule', scheduleSummary(info.schedule), true));
     detailGrid.appendChild(detailCard('📊 Status', statusText, false, statusColor));
     detailGrid.appendChild(detailCard('📤 Delivery', info.deliver, true));
-    if (info.last_run)
+    if (info.last_run) {
       detailGrid.appendChild(
         detailCard('🕐 Last run', new Date(info.last_run).toLocaleString(), false),
       );
-    if (info.next_run)
+    }
+    if (info.next_run) {
       detailGrid.appendChild(
         detailCard('⏳ Next run', new Date(info.next_run).toLocaleString(), false),
       );
-    if (info.last_error)
+    }
+    if (info.last_error) {
       detailGrid.appendChild(detailCard('⚠️ Error', info.last_error, false, 'err'));
-    if (info.provider) detailGrid.appendChild(detailCard('⚙️ Provider', info.provider, false));
-    if (info.model) detailGrid.appendChild(detailCard('🧠 Model', info.model, false));
-    if (info.script) detailGrid.appendChild(detailCard('📜 Script path', info.script, true));
+    }
+    if (info.provider) {
+      detailGrid.appendChild(detailCard('⚙️ Provider', info.provider, false));
+    }
+    if (info.model) {
+      detailGrid.appendChild(detailCard('🧠 Model', info.model, false));
+    }
+    if (info.script) {
+      detailGrid.appendChild(detailCard('📜 Script path', info.script, true));
+    }
     header.appendChild(detailGrid);
 
     // Skills
@@ -602,23 +698,20 @@
       flow.appendChild(flowNode('cron', '⏰', 'Cron Trigger', info.schedule));
       flow.appendChild(arrow('triggers'));
       flow.appendChild(
-        flowNode(
-          'agent',
-          '🤖',
-          'AI Agent',
-          (info.provider || 'default') + ' · ' + (info.model || '?'),
-        ),
+        flowNode('agent', '🤖', 'AI Agent', `${info.provider || 'default'} · ${info.model || '?'}`),
       );
       flow.appendChild(arrow('uses skills'));
 
       if (info.skills.length <= 5) {
         info.skills.forEach(function (s, i) {
           flow.appendChild(flowNode('skill', '🧩', s, 'skill'));
-          if (i < info.skills.length - 1) flow.appendChild(arrow(''));
+          if (i < info.skills.length - 1) {
+            flow.appendChild(arrow(''));
+          }
         });
       } else {
         flow.appendChild(
-          flowNode('skill', '🧩', info.skills.length + ' skills', info.skills.join(', ')),
+          flowNode('skill', '🧩', `${info.skills.length} skills`, info.skills.join(', ')),
         );
       }
 
@@ -633,7 +726,7 @@
           'agent',
           '🤖',
           'AI Agent',
-          (info.provider || 'default') + (info.model ? ' · ' + info.model : ''),
+          (info.provider || 'default') + (info.model ? ` · ${info.model}` : ''),
         ),
       );
       flow.appendChild(arrow('output'));
@@ -655,7 +748,7 @@
           h(
             'div',
             { className: 'dt' },
-            (c.type || '').toUpperCase() + (c.direction ? ' · ' + c.direction : ''),
+            (c.type || '').toUpperCase() + (c.direction ? ` · ${c.direction}` : ''),
           ),
         );
         card.appendChild(h('div', { className: 'dd' }, c.label || 'Unknown'));
@@ -666,7 +759,7 @@
             c.detail || '',
           ),
         );
-        if (c.auth)
+        if (c.auth) {
           card.appendChild(
             h(
               'div',
@@ -674,10 +767,11 @@
                 className: 'dd code',
                 style: { marginTop: '2px', fontSize: '11px', color: 'var(--amber)' },
               },
-              '🔑 ' + c.auth,
+              `🔑 ${c.auth}`,
             ),
           );
-        if (c.url)
+        }
+        if (c.url) {
           card.appendChild(
             h(
               'div',
@@ -688,6 +782,7 @@
               c.url,
             ),
           );
+        }
         connGrid.appendChild(card);
       });
       container.appendChild(connGrid);
@@ -801,11 +896,7 @@
         'Save a detailed profile for this job (connections + process steps) via the ' +
         '<code>cron_flow_visualize</code> agent tool (action <code>set_profile</code>), ' +
         "the <code>/cronflow</code> slash command's underlying tool, or " +
-        '<code>PUT ' +
-        esc(API_BASE) +
-        '/jobs/' +
-        esc(info.id) +
-        '/profile</code>.';
+        `<code>PUT ${esc(API_BASE)}/jobs/${esc(info.id)}/profile</code>.`;
       container.appendChild(hintBox);
     }
   }
@@ -813,7 +904,7 @@
   function detailCard(label, value, isCode, colorClass) {
     var card = h('div', { className: 'detail-card' });
     card.appendChild(h('div', { className: 'dt' }, label));
-    var ddClass = 'dd' + (isCode ? ' code' : '') + (colorClass ? ' ' + colorClass : '');
+    var ddClass = `dd${isCode ? ' code' : ''}${colorClass ? ` ${colorClass}` : ''}`;
     card.appendChild(h('div', { className: ddClass }, value || '—'));
     return card;
   }
@@ -821,7 +912,7 @@
   function flowNode(type, icon, title, sub) {
     return h(
       'div',
-      { className: 'flow-node ' + type },
+      { className: `flow-node ${type}` },
       h('div', { className: 'icon' }, icon),
       h('div', { className: 'title' }, title),
       sub ? h('div', { className: 'sub' }, sub) : null,
@@ -860,7 +951,7 @@
     root = root || document.getElementById('pluginPageContainer') || document.body;
     root.innerHTML = '<div class="empty-state">⏳ Loading cron jobs...</div>';
 
-    SDK.fetchJSON(API_BASE + '/jobs')
+    SDK.fetchJSON(`${API_BASE}/jobs`)
       .then(function (data) {
         if (!data || !data.jobs || !data.jobs.length) {
           root.innerHTML =
@@ -870,10 +961,9 @@
         renderJobList(root, data.jobs);
       })
       .catch(function (err) {
-        root.innerHTML =
-          '<div class="error-state">⚠️ Failed to load cron jobs: ' +
-          esc(err && err.message ? err.message : err) +
-          '</div>';
+        root.innerHTML = `<div class="error-state">⚠️ Failed to load cron jobs: ${esc(
+          err && err.message ? err.message : err,
+        )}</div>`;
       });
   }
 
