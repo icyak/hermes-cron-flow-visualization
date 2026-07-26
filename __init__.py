@@ -16,6 +16,8 @@ from __future__ import annotations
 import json
 from typing import Any, Dict, List
 
+from pydantic import ValidationError
+
 from . import profiles as flow_profiles
 
 # ---------------------------------------------------------------------------
@@ -203,7 +205,14 @@ def _handle_cron_flow_visualize(params: Dict[str, Any], **kwargs) -> str:
                 return json.dumps({"success": False, "error": f"profile_json is not valid JSON: {exc}"})
             if not isinstance(profile, dict):
                 return json.dumps({"success": False, "error": "profile_json must be a JSON object"})
-            saved = flow_profiles.upsert_profile(job_id, profile)
+            try:
+                body = flow_profiles.ProfileBody.model_validate(profile)
+            except ValidationError as exc:
+                return json.dumps({
+                    "success": False,
+                    "error": f"profile_json failed validation: {exc}",
+                })
+            saved = flow_profiles.upsert_profile(job_id, flow_profiles.serialize_profile(body))
             return json.dumps({"success": True, "job_id": job_id, "profile": saved})
 
         if action == "delete_profile":

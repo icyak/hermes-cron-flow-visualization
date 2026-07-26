@@ -28,13 +28,56 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any, Dict
+from typing import Any, Dict, List, Literal, Optional
+
+from pydantic import BaseModel
 
 try:
     from hermes_constants import get_hermes_home
 except ImportError:  # pragma: no cover - only importable inside a Hermes install
     def get_hermes_home() -> Path:  # type: ignore[misc]
         return Path.home() / ".hermes"
+
+
+class ConnectionItem(BaseModel):
+    """One connection entry in a custom profile's ``connections`` list."""
+
+    type: Literal["api", "file"]
+    label: str
+    detail: Optional[str] = None
+    direction: Optional[Literal["read", "write"]] = None
+    auth: Optional[str] = None
+    url: Optional[str] = None
+    format: Optional[str] = None
+
+
+class ProcessStep(BaseModel):
+    """One step entry in a custom profile's ``process`` list."""
+
+    label: str
+    detail: Optional[str] = None
+
+
+class ProfileBody(BaseModel):
+    """The full shape of a custom per-job profile, as documented above."""
+
+    name: Optional[str] = None
+    connections: Optional[List[ConnectionItem]] = None
+    process: Optional[List[ProcessStep]] = None
+
+
+def serialize_profile(body: ProfileBody) -> Dict[str, Any]:
+    """Turn a validated ``ProfileBody`` into the plain-dict shape stored on
+    disk and returned to callers -- unset fields omitted, each list item
+    dumped without its own None-valued fields."""
+    profile: Dict[str, Any] = {}
+    if body.name is not None:
+        profile["name"] = body.name
+    if body.connections is not None:
+        profile["connections"] = [c.model_dump(exclude_none=True) for c in body.connections]
+    if body.process is not None:
+        profile["process"] = [p.model_dump(exclude_none=True) for p in body.process]
+    return profile
 
 
 def _profiles_file() -> Path:

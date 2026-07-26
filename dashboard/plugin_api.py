@@ -23,10 +23,9 @@ from __future__ import annotations
 import importlib.util
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict
 
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 
 router = APIRouter()
 
@@ -103,16 +102,17 @@ def get_job_flow(job_id: str):
     return {"flow": flow.build_flow(job)}
 
 
-class ProfileBody(BaseModel):
-    name: Optional[str] = None
-    connections: Optional[list] = None
-    process: Optional[list] = None
+# ProfileBody (and its ConnectionItem/ProcessStep sub-models) live in
+# profiles.py so the request-body schema enforced here matches exactly what
+# the cron_flow_visualize tool's set_profile action validates in __init__.py
+# -- one schema, imported by both surfaces instead of duplicated.
+ProfileBody = _profiles_module().ProfileBody
 
 
 @router.put("/jobs/{job_id}/profile")
 def put_profile(job_id: str, body: ProfileBody):
     flow_profiles = _profiles_module()
-    profile: Dict[str, Any] = {k: v for k, v in body.model_dump().items() if v is not None}
+    profile: Dict[str, Any] = flow_profiles.serialize_profile(body)
     saved = flow_profiles.upsert_profile(job_id, profile)
     return {"ok": True, "job_id": job_id, "profile": saved}
 
