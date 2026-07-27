@@ -949,22 +949,35 @@
 
   function init(root) {
     root = root || document.getElementById('pluginPageContainer') || document.body;
-    root.innerHTML = '<div class="empty-state">⏳ Loading cron jobs...</div>';
 
-    SDK.fetchJSON(`${API_BASE}/jobs`)
-      .then(function (data) {
-        if (!data || !data.jobs || !data.jobs.length) {
-          root.innerHTML =
-            '<div class="error-state">⚠️ No cron jobs found. Create one with `hermes cron create` or the cronjob tool.</div>';
-          return;
-        }
-        renderJobList(root, data.jobs);
-      })
-      .catch(function (err) {
-        root.innerHTML = `<div class="error-state">⚠️ Failed to load cron jobs: ${esc(
-          err && err.message ? err.message : err,
-        )}</div>`;
-      });
+    function load() {
+      SDK.fetchJSON(`${API_BASE}/jobs`)
+        .then(function (data) {
+          if (!data || !data.jobs || !data.jobs.length) {
+            root.innerHTML =
+              '<div class="error-state">⚠️ No cron jobs found. Create one with `hermes cron create` or the cronjob tool.</div>';
+            return;
+          }
+          renderJobList(root, data.jobs);
+        })
+        .catch(function (err) {
+          root.innerHTML = `<div class="error-state">⚠️ Failed to load cron jobs: ${esc(
+            err && err.message ? err.message : err,
+          )}</div>`;
+        });
+    }
+
+    root.innerHTML = '<div class="empty-state">⏳ Loading cron jobs...</div>';
+    load();
+
+    // Auto-refresh every 30s — skip when tab not visible
+    var intervalId = setInterval(function () {
+      if (document.hidden) return;
+      load();
+    }, 30000);
+
+    // Store interval id on root so it can be cleaned up
+    root._autoRefreshInterval = intervalId;
   }
 
   window.__HERMES_PLUGINS__.register('hermes-cron-flow-visualization', Page);
