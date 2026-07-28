@@ -32,12 +32,15 @@
 (function () {
   'use strict';
 
-  var SDK = window.__HERMES_PLUGIN_SDK__;
-  if (!SDK) {
-    return;
-  }
+  function boot() {
+    var SDK = window.__HERMES_PLUGIN_SDK__;
+    if (!SDK) {
+      // SDK loads React from CDN asynchronously — wait for it
+      document.addEventListener('hermes-plugin-sdk-ready', boot, { once: true });
+      return;
+    }
 
-  // API base for this plugin's backend routes (dashboard/plugin_api.py).
+    // API base for this plugin's backend routes (dashboard/plugin_api.py).
   // Custom per-job profiles are resolved server-side (shared with the
   // `cron_flow_visualize` model tool / `/cronflow` slash command via
   // ../profiles.py) — every job the API returns already carries a
@@ -981,4 +984,10 @@
   }
 
   window.__HERMES_PLUGINS__.register('hermes-cron-flow-visualization', Page);
+
+    // Auto-render: when loaded as standalone plugin page, render immediately
+    init();
+  } // end boot()
+
+  boot();
 })();
