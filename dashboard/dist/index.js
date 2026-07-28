@@ -281,26 +281,35 @@
   //  JOB ANALYSIS
   // ══════════════════════════════════════════════════════════
   function analyzeJob(job) {
+    // Handle nested flow structure from build_flow() (job.info)
+    // Falls back to flat job fields for raw /api/cron/jobs data
+    var data = (job.info && typeof job.info === 'object') ? job.info : job;
+
     var info = {
-      id: job.id,
-      name: job.name || 'Unnamed job',
+      id: data.id || job.id,
+      name: data.name || job.name || 'Unnamed job',
       schedule:
-        job.schedule_display ||
+        data.schedule_display ||
+        (data.schedule && data.schedule.display) ||
+        (data.schedule && data.schedule.expr) ||
+        (job.schedule_display) ||
         (job.schedule && job.schedule.display) ||
         (job.schedule && job.schedule.expr) ||
+        data.schedule ||
+        job.schedule ||
         '?',
-      no_agent: !!job.no_agent,
-      script: job.script || null,
-      skills: Array.isArray(job.skills) ? job.skills : [],
-      provider: job.provider || null,
-      model: job.model || null,
-      deliver: job.deliver || 'local',
-      last_run: job.last_run_at || null,
-      last_status: job.last_status || null,
-      last_error: job.last_error || null,
-      next_run: job.next_run_at || null,
-      enabled: job.enabled !== false,
-      has_custom_profile: !!job.has_custom_profile,
+      no_agent: !!(data.no_agent !== undefined ? data.no_agent : job.no_agent),
+      script: data.script || job.script || null,
+      skills: Array.isArray(data.skills) ? data.skills : (Array.isArray(job.skills) ? job.skills : []),
+      provider: data.provider || job.provider || null,
+      model: data.model || job.model || null,
+      deliver: data.deliver || job.deliver || 'local',
+      last_run: data.last_run_at || job.last_run_at || null,
+      last_status: data.last_status || job.last_status || null,
+      last_error: data.last_error || job.last_error || null,
+      next_run: data.next_run_at || job.next_run_at || null,
+      enabled: data.enabled !== false,
+      has_custom_profile: !!(data.has_custom_profile !== undefined ? data.has_custom_profile : job.has_custom_profile),
     };
 
     return info;
@@ -422,14 +431,18 @@
   // The backend already resolved custom-vs-generic connections/process
   // for us (see ../__init__.py:build_flow + ../profiles.py), so this is
   // just a normalizing accessor over the fields the API returned.
+  // build_flow returns {info, steps, connections} — we map steps→process.
   function resolveProfile(job) {
-    if (!job || (!job.connections && !job.process)) {
+    if (!job) { return null; }
+    var connections = job.connections;
+    var process = job.process || job.steps;
+    if (!connections && !process) {
       return null;
     }
     return {
-      name: job.name,
-      connections: job.connections || [],
-      process: job.process || [],
+      name: (job.info && job.info.name) || job.name,
+      connections: connections || [],
+      process: process || [],
     };
   }
 
